@@ -365,38 +365,6 @@ def autopad(k, p=None):  # kernel, padding
         p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
     return p
 
-
-class TransformerLayer(nn.Module):
-    # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)
-    def __init__(self, c, num_heads):
-        super().__init__()
-
-        self.layernorm1 = nn.LayerNorm(c)
-        self.q = nn.Linear(c, c, bias=False)
-        self.k = nn.Linear(c, c, bias=False)
-        self.v = nn.Linear(c, c, bias=False)
-        self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
-
-        self.layernorm2 = nn.LayerNorm(c)
-        self.fc1 = nn.Linear(c, 4 * c, bias=False)
-        self.fc2 = nn.Linear(4 * c, c, bias=False)
-
-        self.dropout = nn.Dropout(0.1)
-        self.act = nn.ReLU(True)
-
-    def forward(self, x):
-        x1 = x
-        x = self.layernorm1(x)
-        x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x1  # <--- return two outputs, which is not kind to DDP
-
-        x2 = x
-        x = self.layernorm2(x)
-        x = self.dropout(self.act(self.fc1(x)))
-        x = self.dropout(self.fc2(x)) + x2
-
-        return x
-
-
 class SiLU(nn.Module):
     @staticmethod
     def forward(x):
@@ -542,24 +510,54 @@ class C3TR(CSPLayer):
         self.m = TransformerBlock(c_, c_, 4, n)
 
 
-class TransformerBlock(nn.Module):
-    # Vision Transformer
-    def __init__(self, c1, c2, num_heads, num_layers):
-        super().__init__()
-        self.conv = None
-        if c1 != c2:
-            self.conv = Conv(c1, c2)
-        self.linear = nn.Linear(c2, c2)  # learnable position embedding
-        self.tr = nn.Sequential(*[TransformerLayer(c2, num_heads) for _ in range(num_layers)])
-        self.c2 = c2
+# class TransformerLayer(nn.Module):
+#     # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)
+#     def __init__(self, c, num_heads):
+#         super().__init__()
 
-    def forward(self, x):
-        if self.conv is not None:
-            x = self.conv(x)
-        b, _, w, h = x.shape
-        p = x.flatten(2).unsqueeze(0).transpose(0, 3).squeeze(3)
-        return self.tr(p + self.linear(p)).unsqueeze(3).transpose(0, 3).reshape(b, self.c2, w, h)
+#         self.layernorm1 = nn.LayerNorm(c)
+#         self.q = nn.Linear(c, c, bias=False)
+#         self.k = nn.Linear(c, c, bias=False)
+#         self.v = nn.Linear(c, c, bias=False)
+#         self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
 
+#         self.layernorm2 = nn.LayerNorm(c)
+#         self.fc1 = nn.Linear(c, 4 * c, bias=False)
+#         self.fc2 = nn.Linear(4 * c, c, bias=False)
+
+#         self.dropout = nn.Dropout(0.1)
+#         self.act = nn.ReLU(True)
+
+#     def forward(self, x):
+#         x1 = x
+#         x = self.layernorm1(x)
+#         x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x1  # <--- return two outputs, which is not kind to DDP
+
+#         x2 = x
+#         x = self.layernorm2(x)
+#         x = self.dropout(self.act(self.fc1(x)))
+#         x = self.dropout(self.fc2(x)) + x2
+
+#         return x
+
+# class TransformerBlock(nn.Module):
+#     # Vision Transformer
+#     def __init__(self, c1, c2, num_heads, num_layers):
+#         super().__init__()
+#         self.conv = None
+#         if c1 != c2:
+#             self.conv = Conv(c1, c2)
+#         self.linear = nn.Linear(c2, c2)  # learnable position embedding
+#         self.tr = nn.Sequential(*[TransformerLayer(c2, num_heads) for _ in range(num_layers)])
+#         self.c2 = c2
+
+#     def forward(self, x):
+#         if self.conv is not None:
+#             x = self.conv(x)
+#         b, _, w, h = x.shape
+#         p = x.flatten(2).unsqueeze(0).transpose(0, 3).squeeze(3)
+#         return self.tr(p + self.linear(p)).unsqueeze(3).transpose(0, 3).reshape(b, self.c2, w, h)
+from .fixed_datknet import TransformerBlock, TransformerLayer
 
 class CSPDarknet(nn.Module):
     def __init__(self, dep_mul, wid_mul, out_features=("dark3", "dark4", "dark5"), depthwise=False, act="silu",):
