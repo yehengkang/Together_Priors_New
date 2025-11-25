@@ -7,7 +7,10 @@ from PIL import Image
 from yolo import YOLO
 
 if __name__ == "__main__":
-    yolo = YOLO()
+    model_path = "logs/loss_2025_11_06_16_27_03_baseline/ep100-loss0.497-val_loss1.546.pth"
+    print("Loading model...")
+    yolo = YOLO(model_path = model_path)
+    print("Model loaded.")
     # ----------------------------------------------------------------------------------------------------------#
     #   mode：
     #   'predict'
@@ -25,7 +28,7 @@ if __name__ == "__main__":
 
     test_interval   = 100
 
-    dir_origin_path = "img/"
+    dir_origin_path = "/media/omnisky/Disk8.0T/datasets/voc_fog_9578+2129/test/VOCtest-FOG"
     dir_save_path   = "img_out/"
 
     if mode == "predict":
@@ -94,10 +97,12 @@ if __name__ == "__main__":
         from tqdm import tqdm
 
         img_names = os.listdir(dir_origin_path)
-        for img_name in tqdm(img_names):
+        for idx, img_name in enumerate(tqdm(img_names)):
+            if idx >= 10: break
             if img_name.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.jpeg', '.pbm', '.pgm', '.ppm', '.tif', '.tiff')):
                 image_path  = os.path.join(dir_origin_path, img_name)
                 image       = Image.open(image_path)
+                # r_image     = yolo.detect_image(image, show_on_clear = True)
                 r_image     = yolo.detect_image(image)
                 if not os.path.exists(dir_save_path):
                     os.makedirs(dir_save_path)

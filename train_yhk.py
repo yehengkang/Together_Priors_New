@@ -22,7 +22,7 @@ if __name__ == "__main__":
     Cuda            = True
     classes_path    = 'model_data/rtts_classes.txt'
     # model_path      = 'model_data/yolox_s.pth'                 # Pretrained weights for better performance (COCO or VOC）
-    model_path      = 'pretrained/yolox_s_Megvii.pth'            # No pretrained weights
+    model_path      = 'pretrained/yolox_s_bubbliiiing.pth'            # No pretrained weights
     input_shape     = [640, 640]
     phi             = 's'
     mosaic              = False
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     Freeze_batch_size   = 8
 
     UnFreeze_Epoch      = 100
-    Unfreeze_batch_size = 8
+    Unfreeze_batch_size = 12
 
     Freeze_Train        = False
     

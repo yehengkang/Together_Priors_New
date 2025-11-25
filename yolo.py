@@ -7,9 +7,10 @@ import torch
 import torch.nn as nn
 from PIL import ImageDraw, ImageFont
 
-from nets_yhk.yolo import YoloBody
+from nets.yolo import YoloBody
 from utils.utils import cvtColor, get_classes, preprocess_input, resize_image
 from utils.utils_bbox import decode_outputs, non_max_suppression
+from PIL import Image
 
 
 class YOLO(object):
@@ -66,8 +67,8 @@ class YOLO(object):
             self.net = self.net.cuda()
 
 
-    def detect_image(self, image, crop = False):
-
+    def detect_image(self, image, crop = False, show_on_clear = False):
+        import ipdb; ipdb.set_trace()
         image_shape = np.array(np.shape(image)[0:2])
 
         image       = cvtColor(image)
@@ -82,6 +83,11 @@ class YOLO(object):
                 images = images.cuda()
 
             outputs = self.net(images)
+            if show_on_clear:
+                img_t = outputs[1][0]    # shape: [3, 640, 640]
+                img_t = img_t.permute(1, 2, 0)   # shape: [640, 640, 3]
+                img_np = (img_t * 255).cpu().numpy().astype("uint8")
+                img_clear = Image.fromarray(img_np)
             outputs = decode_outputs(outputs[0], self.input_shape)
 
             results = non_max_suppression(outputs, self.num_classes, self.input_shape, 
@@ -127,8 +133,16 @@ class YOLO(object):
             right   = min(image.size[0], np.floor(right).astype('int32'))
 
             label = '{} {:.2f}'.format(predicted_class, score)
-            draw = ImageDraw.Draw(image)
-            label_size = draw.textsize(label, font)
+            # import ipdb; ipdb.set_trace()
+            if show_on_clear:
+                draw = ImageDraw.Draw(img_clear)
+            else:
+                draw = ImageDraw.Draw(image)
+            # label_size = draw.textsize(label, font)
+            bbox = draw.textbbox((0, 0), label, font=font)
+            label_w = bbox[2] - bbox[0]
+            label_h = bbox[3] - bbox[1]
+            label_size = (label_w, label_h)
             label = label.encode('utf-8')
             print(label, top, left, bottom, right)
             
@@ -143,7 +157,7 @@ class YOLO(object):
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
             del draw
 
-        return image
+        return image if not show_on_clear else img_clear
 
     def get_FPS(self, image, test_interval):
         image_shape = np.array(np.shape(image)[0:2])

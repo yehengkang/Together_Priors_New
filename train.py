@@ -30,7 +30,7 @@ if __name__ == "__main__":
     Freeze_batch_size   = 8
 
     UnFreeze_Epoch      = 100
-    Unfreeze_batch_size = 8
+    Unfreeze_batch_size = 12
 
     Freeze_Train        = False
     
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     model_train = model.train()
     if Cuda:
         # model_train = torch.nn.DataParallel(model)
-        model_train = torch.nn.DataParallel(model, device_ids=[0, 1])
+        model_train = torch.nn.DataParallel(model, device_ids=[0, 1, 2])
         cudnn.benchmark = True
         model_train = model_train.cuda()
 

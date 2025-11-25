@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     VOCdevkit_path  = '/media/omnisky/Disk8.0T/datasets/voc_fog_9578+2129/test'
 
-    map_out_path    = 'map_out/test_1121_priors1_1'
+    map_out_path    = 'map_out/test_1125_fixed_attenion'
 
     #image_ids = open(os.path.join(VOCdevkit_path, "VOC2007/ImageSets/Main/test.txt")).read().strip().split()
     image_ids = open("datasets/test.txt").read().strip().split()
