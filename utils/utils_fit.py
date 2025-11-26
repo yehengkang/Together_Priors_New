@@ -18,7 +18,8 @@ def fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch,
             # if iteration >= 5:
                 break
 
-            images, targets, clearimgs = batch[0], batch[1], batch[2]
+            images, targets, clearimgs = batch[0], batch[1], batch[2]  # shape:(12, 3, 640, 640)
+            # import ipdb; ipdb.set_trace()
             with torch.no_grad():
                 if cuda:
                     images  = torch.from_numpy(images).type(torch.FloatTensor).cuda()

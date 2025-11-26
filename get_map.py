@@ -13,7 +13,7 @@ if __name__ == "__main__":
     map_mode        = 0
 
     classes_path    = 'model_data/rtts_classes.txt'
-    model_path      = 'logs/loss_2025_11_20_23_43_30_Priors1/ep100-loss0.488-val_loss1.553.pth'
+    model_path      = 'logs/loss_2025_11_24_22_43_50/ep100-loss0.486-val_loss1.457.pth'
 
     # MINOVERLAP      = [0.5,0.65,0.7,0.75,0.8,0.85,0.9,0.95]
     MINOVERLAP      = [0.5]
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     VOCdevkit_path  = '/media/omnisky/Disk8.0T/datasets/voc_fog_9578+2129/test'
 
-    map_out_path    = 'map_out/test_1125_fixed_attenion'
+    map_out_path    = 'map_out/test_1125_fixed_attenion_1'
 
     #image_ids = open(os.path.join(VOCdevkit_path, "VOC2007/ImageSets/Main/test.txt")).read().strip().split()
     image_ids = open("datasets/test.txt").read().strip().split()

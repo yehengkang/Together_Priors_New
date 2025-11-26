@@ -8,7 +8,7 @@ import torch.nn as nn
 from PIL import ImageDraw, ImageFont
 
 from nets.yolo import YoloBody
-from utils.utils import cvtColor, get_classes, preprocess_input, resize_image
+from utils.utils import cvtColor, get_classes, preprocess_input, resize_image, resize_image_new, restore_to_original_size
 from utils.utils_bbox import decode_outputs, non_max_suppression
 from PIL import Image
 
@@ -68,12 +68,13 @@ class YOLO(object):
 
 
     def detect_image(self, image, crop = False, show_on_clear = False):
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         image_shape = np.array(np.shape(image)[0:2])
 
         image       = cvtColor(image)
 
-        image_data  = resize_image(image, (self.input_shape[1],self.input_shape[0]), self.letterbox_image)
+        # image_data  = resize_image(image, (self.input_shape[1],self.input_shape[0]), self.letterbox_image)
+        image_data, nw, nh, dx, dy = resize_image_new(image, (self.input_shape[1],self.input_shape[0]), self.letterbox_image)
 
         image_data  = np.expand_dims(np.transpose(preprocess_input(np.array(image_data, dtype='float32')), (2, 0, 1)), 0)
 
@@ -83,11 +84,12 @@ class YOLO(object):
                 images = images.cuda()
 
             outputs = self.net(images)
+
             if show_on_clear:
-                img_t = outputs[1][0]    # shape: [3, 640, 640]
-                img_t = img_t.permute(1, 2, 0)   # shape: [640, 640, 3]
-                img_np = (img_t * 255).cpu().numpy().astype("uint8")
+                img_np = restore_to_original_size(outputs[1], image_shape, (self.input_shape[1],self.input_shape[0]), (nw, nh, dx, dy))
                 img_clear = Image.fromarray(img_np)
+                image_clear_init = img_clear.copy()
+                
             outputs = decode_outputs(outputs[0], self.input_shape)
 
             results = non_max_suppression(outputs, self.num_classes, self.input_shape, 
@@ -133,11 +135,12 @@ class YOLO(object):
             right   = min(image.size[0], np.floor(right).astype('int32'))
 
             label = '{} {:.2f}'.format(predicted_class, score)
-            # import ipdb; ipdb.set_trace()
+
             if show_on_clear:
                 draw = ImageDraw.Draw(img_clear)
             else:
                 draw = ImageDraw.Draw(image)
+            
             # label_size = draw.textsize(label, font)
             bbox = draw.textbbox((0, 0), label, font=font)
             label_w = bbox[2] - bbox[0]
@@ -156,8 +159,10 @@ class YOLO(object):
             draw.rectangle([tuple(text_origin), tuple(text_origin + label_size)], fill=self.colors[c])
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
             del draw
-
-        return image if not show_on_clear else img_clear
+        if show_on_clear:
+            return img_clear, image_clear_init
+        else:
+            return image, []
 
     def get_FPS(self, image, test_interval):
         image_shape = np.array(np.shape(image)[0:2])
