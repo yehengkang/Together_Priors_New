@@ -1,4 +1,5 @@
 import os
+import re
 import xml.etree.ElementTree as ET
 
 from PIL import Image
@@ -8,21 +9,33 @@ from yolo import YOLO
 from utils.utils import get_classes
 from utils.utils_map import get_coco_map, get_map
 
+
+def extract_datetime_from_filenames(filenames):
+    pattern = r"loss_\d+_(\d+)_(\d+)_(\d+)_"
+
+    m = re.search(pattern, filenames)
+    if m:
+        month, day, hour = m.groups()
+        return month + day + '-' + hour
+
+
 if __name__ == "__main__":
 
     map_mode        = 0
+    map_vis         = False
+    MINOVERLAP      = [0.5]
+    # MINOVERLAP      = [0.5,0.65,0.7,0.75,0.8,0.85,0.9,0.95]
+    DEBUG           = False
 
     classes_path    = 'model_data/rtts_classes.txt'
-    model_path      = 'logs/loss_2025_11_24_22_43_50/ep100-loss0.486-val_loss1.457.pth'
-
-    # MINOVERLAP      = [0.5,0.65,0.7,0.75,0.8,0.85,0.9,0.95]
-    MINOVERLAP      = [0.5]
-
-    map_vis         = False
-
+    model_path      = 'logs/loss_2025_12_08_01_01_40_psnr+/ep100-loss1.018-val_loss1.577.pth'
     VOCdevkit_path  = '/media/omnisky/Disk8.0T/datasets/voc_fog_9578+2129/test'
 
-    map_out_path    = 'map_out/test_1125_fixed_attenion_1'
+    data_time       = extract_datetime_from_filenames(model_path.split('/')[1])
+    if DEBUG:
+        map_out_path = 'map_out/debug_' + data_time + '-psnr+/'
+    else:
+        map_out_path    = 'map_out/test_' + data_time + '-psnr+/'
 
     #image_ids = open(os.path.join(VOCdevkit_path, "VOC2007/ImageSets/Main/test.txt")).read().strip().split()
     image_ids = open("datasets/test.txt").read().strip().split()
@@ -56,7 +69,7 @@ if __name__ == "__main__":
             #     image_path = os.path.join(VOCdevkit_path, "images/" + image_id + ".jpeg")
             #     if format_b not in all_name:
             #         image_path = os.path.join(VOCdevkit_path, "images/" + image_id + ".png")
-
+            if 
             image = Image.open(image_path)
             if map_vis:
                 image.save(os.path.join(map_out_path, "images-optional/" + image_id + ".jpg"))
