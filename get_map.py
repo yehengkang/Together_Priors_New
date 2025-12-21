@@ -39,7 +39,7 @@ if __name__ == "__main__":
         from_txt = True
 
     data_time       = extract_datetime_from_filenames(model_path.split('/')[1])
-    map_out_path = 'map_out/test_' + data_time + '_base_city' + '/'
+    map_out_path = 'map_out/test_' + data_time + '_priors_city' + '/'
     if DEBUG:
         map_out_path = map_out_path.replace('test_', 'debug_')
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
             txt_path = Path(VOCdevkit_path)
             with txt_path.open('r', encoding='utf-8') as f:
                 image_path_all = f.read()
-            for idx, txt_line in enumerate(tqdm(image_path_all.split('\n'))):
+            for idx, txt_line in tqdm(enumerate(image_path_all.split('\n'))):
                 if DEBUG and idx > 100: break
                 image_path = txt_line.split(' ')[0]
                 image_name = Path(os.path.basename(image_path)).stem
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                 
                 yolo.get_map_txt(image_name, image, class_names, map_out_path, clear_img=clear_img, see_feat_in_dir = see_feat_in_dir)
         else:
-            for idx, image_id in enumerate(tqdm(image_ids)):
+            for idx, image_id in tqdm(enumerate(image_ids)):
                 if DEBUG and idx > 100: break
                 image_path = os.path.join(VOCdevkit_path, "VOCtest-FOG/" + image_id + ".jpg")
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
             txt_path = Path(VOCdevkit_path)
             with txt_path.open('r', encoding='utf-8') as f:
                 image_path_all = f.read()
-            for idx, txt_line in enumerate(tqdm(image_path_all.split('\n'))):
+            for idx, txt_line in tqdm(enumerate(image_path_all.split('\n'))):
                 image_path = txt_line.split(' ')[0]
                 image_name = Path(os.path.basename(image_path)).stem
                 with open(os.path.join(map_out_path, "ground-truth/"+image_name+".txt"), "w") as new_f:
@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
                         new_f.write("%s %s %s %s %s\n" % (obj_name, left, top, right, bottom))
         else:
-            for image_id in tqdm(image_ids):
+            for idx, image_id in tqdm(enumerate(image_ids)):
                 with open(os.path.join(map_out_path, "ground-truth/"+image_id+".txt"), "w") as new_f:
                     root = ET.parse(os.path.join(VOCdevkit_path, "Annotations/"+image_id+".xml")).getroot()
                     for obj in root.findall('object'):
